@@ -12,8 +12,8 @@ This project uses the Google Maps JavaScript API to display a custom-themed map.
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/en/) (v14 or later)
-- [npm](https://www.npmjs.com/) (comes with Node.js)
+- [Node.js]
+- [npm]
 - A Google Cloud Platform account with the **Google Maps JavaScript API** enabled.
 - A valid **Google Maps API key**.
 
