@@ -1,3 +1,16 @@
+// Helper function that checks if all words of 'shorter' appear in order in 'longer'
+function isSubset(shorter, longer) {
+  const shortWords = shorter.split(/\s+/);
+  const longWords = longer.split(/\s+/);
+  let j = 0;
+  for (let i = 0; i < longWords.length && j < shortWords.length; i++) {
+    if (shortWords[j] === longWords[i]) {
+      j++;
+    }
+  }
+  return j === shortWords.length;
+}
+
 // Function to load the Google Maps API script dynamically
 function loadGoogleMaps() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -12,7 +25,7 @@ function loadGoogleMaps() {
   document.head.appendChild(script);
 }
 
-// Function to load and parse the train stations CSV (TXT file)
+// Function to load and parse the train stations CSV (TXT file) and add markers with improved deduplication
 function loadTrainStations(map) {
   fetch('/data/stops.txt')
     .then(response => response.text())
@@ -35,16 +48,50 @@ function loadTrainStations(map) {
         };
       });
       
-      // Add a marker for each train station using the custom PNG icon
+      // Improved deduplication: prefer entries that include "railway station"
+      const uniqueStations = [];
       trainStations.forEach(station => {
+        let found = false;
+        for (let i = 0; i < uniqueStations.length; i++) {
+          const existing = uniqueStations[i];
+          const nameExisting = existing.stop_name.toLowerCase();
+          const nameCurrent = station.stop_name.toLowerCase();
+          
+          // Check if one name is a subset of the other based on words
+          if (isSubset(nameExisting, nameCurrent) || isSubset(nameCurrent, nameExisting)) {
+            found = true;
+            const existingHasRailway = nameExisting.includes("railway station");
+            const currentHasRailway = nameCurrent.includes("railway station");
+            
+            // Prefer the one that includes "railway station" if only one does
+            if (currentHasRailway && !existingHasRailway) {
+              uniqueStations[i] = station;
+            } else if (!currentHasRailway && existingHasRailway) {
+              // Keep existing
+            } else {
+              // If both or neither have it, prefer the one with the longer name
+              if (station.stop_name.length > existing.stop_name.length) {
+                uniqueStations[i] = station;
+              }
+            }
+            break;
+          }
+        }
+        if (!found) {
+          uniqueStations.push(station);
+        }
+      });
+      
+      // Add a marker for each unique train station using the custom PNG icon
+      uniqueStations.forEach(station => {
         new google.maps.Marker({
           position: { lat: station.stop_lat, lng: station.stop_lon },
           map: map,
           title: station.stop_name,
           icon: {
-            url: '/assets/icons/train.png', // Custom PNG icon
-            scaledSize: new google.maps.Size(35, 35),  // Adjust the size as needed
-            // anchor: new google.maps.Point(15, 15)
+            url: '/assets/icons/persona_train.png', // Custom PNG icon for train stations
+            scaledSize: new google.maps.Size(50, 50),  // Adjust the size as needed
+            anchor: new google.maps.Point(15, 15) // Adjust the anchor as needed
           }
         });
       });
@@ -158,14 +205,14 @@ window.initMap = function () {
         { color: '#FFFFFF' }
       ]
     },
+    // Transit lines styled (example)
     {
       featureType: 'transit.line',
       elementType: 'geometry',
       stylers: [
-        { color: '#ebd534' } // Blue, for example
+        { color: '#ebd534' }
       ]
     }
-    
   ];
   
   // Create the map
@@ -175,10 +222,10 @@ window.initMap = function () {
     styles: persona5Style
   });
 
-    // Load the train station data and overlay custom markers
-    loadTrainStations(map); // Call the function to load the train stations
+  // Load the train station data and overlay custom markers
+  loadTrainStations(map);
 
-  // Place a marker at Melbourne
+  // Place a marker at Melbourne with a custom marker icon
   new google.maps.Marker({
     position: melbourne,
     map: map,
@@ -188,7 +235,6 @@ window.initMap = function () {
       scaledSize: new google.maps.Size(75, 75) // Adjust the size as needed
     }
   });
-  
 };
 
 // Start by loading the Google Maps API
