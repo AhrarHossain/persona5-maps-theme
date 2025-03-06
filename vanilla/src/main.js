@@ -140,9 +140,12 @@ window.initMap = function () {
     position: melbourne,
     map: map,
     title: 'Melbourne, Victoria',
-    // Uncomment and update the path when your custom marker asset is ready:
-    // icon: '/public/assets/icons/custom-marker.png'
+    icon: {
+      url: '/assets/icons/marker.png',
+      scaledSize: new google.maps.Size(75, 75) // Adjust the size as needed
+    }
   });
+  
 };
 
 // Start by loading the Google Maps API
