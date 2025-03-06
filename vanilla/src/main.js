@@ -12,6 +12,46 @@ function loadGoogleMaps() {
   document.head.appendChild(script);
 }
 
+// Function to load and parse the train stations CSV (TXT file)
+function loadTrainStations(map) {
+  fetch('/data/stops.txt')
+    .then(response => response.text())
+    .then(text => {
+      // Split the text into lines and filter out empty lines
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+      
+      // Remove the header row
+      lines.shift();
+      
+      // Parse each line into an object
+      const trainStations = lines.map(line => {
+        // Split by comma and remove surrounding quotes
+        const values = line.split(',').map(val => val.replace(/^"|"$/g, '').trim());
+        return {
+          stop_id: values[0],
+          stop_name: values[1],
+          stop_lat: parseFloat(values[2]),
+          stop_lon: parseFloat(values[3])
+        };
+      });
+      
+      // Add a marker for each train station using the custom PNG icon
+      trainStations.forEach(station => {
+        new google.maps.Marker({
+          position: { lat: station.stop_lat, lng: station.stop_lon },
+          map: map,
+          title: station.stop_name,
+          icon: {
+            url: '/assets/icons/train.png', // Custom PNG icon
+            scaledSize: new google.maps.Size(35, 35),  // Adjust the size as needed
+            // anchor: new google.maps.Point(15, 15)
+          }
+        });
+      });
+    })
+    .catch(err => console.error('Error loading train stations:', err));
+}
+
 // Global function called by the Google Maps API
 window.initMap = function () {
   console.log("Google Maps API loaded");
@@ -134,6 +174,9 @@ window.initMap = function () {
     zoom: 12,
     styles: persona5Style
   });
+
+    // Load the train station data and overlay custom markers
+    loadTrainStations(map); // Call the function to load the train stations
 
   // Place a marker at Melbourne
   new google.maps.Marker({
