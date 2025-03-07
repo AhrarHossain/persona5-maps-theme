@@ -25,7 +25,9 @@ function loadGoogleMaps() {
   document.head.appendChild(script);
 }
 
-// Function to load and parse the train stations CSV (TXT file) and add markers with improved deduplication
+// Function to load and parse the train stations CSV (TXT file),
+// filter out bus stops (only include entries that have "railway station" and do not include "bus stop"),
+// and add markers with improved deduplication.
 function loadTrainStations(map) {
   fetch('/data/stops.txt')
     .then(response => response.text())
@@ -48,9 +50,15 @@ function loadTrainStations(map) {
         };
       });
       
+      // Filter out bus stops and only include stops that contain "railway station"
+      const railwayStations = trainStations.filter(station => {
+        const name = station.stop_name.toLowerCase();
+        return name.includes("railway station") && !name.includes("bus stop");
+      });
+      
       // Improved deduplication: prefer entries that include "railway station"
       const uniqueStations = [];
-      trainStations.forEach(station => {
+      railwayStations.forEach(station => {
         let found = false;
         for (let i = 0; i < uniqueStations.length; i++) {
           const existing = uniqueStations[i];
@@ -91,7 +99,7 @@ function loadTrainStations(map) {
           icon: {
             url: '/assets/icons/persona_train.png', // Custom PNG icon for train stations
             scaledSize: new google.maps.Size(50, 50),  // Adjust the size as needed
-            anchor: new google.maps.Point(15, 15) // Adjust the anchor as needed
+            anchor: new google.maps.Point(15, 15)      // Adjust the anchor as needed
           }
         });
       });
@@ -222,7 +230,7 @@ window.initMap = function () {
     styles: persona5Style
   });
 
-  // Load the train station data and overlay custom markers
+  // Load the train station data (filtered and deduplicated) and overlay custom markers
   loadTrainStations(map);
 
   // Place a marker at Melbourne with a custom marker icon
