@@ -47,6 +47,8 @@ At the root of the vanilla folder, create a file named .env and add your Google 
     ```bash
     npm run dev
 
+    *Note: Please make sure to run the project in the "vanilla" directory*
+
 2. **Open your browser:**
 
     Visit the URL provided by Vite to see the map in action.
