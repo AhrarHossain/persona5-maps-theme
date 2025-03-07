@@ -60,7 +60,7 @@ At the root of the vanilla folder, create a file named .env and add your Google 
 
 - Google Maps JavaScript API.
 
-- Vite - A modern build tool for frontend development.
+- Vite.
 
 - HTML, CSS, and JavaScript.
 
